@@ -13,16 +13,63 @@ import (
 	"time"
 )
 
-func strftime(b *bytes.Buffer, c rune, t time.Time) error {
+var days = map[string][]string{
+	"de": []string{
+		"Sonntag",
+		"Montag",
+		"Dienstag",
+		"Mittwoch",
+		"Donnerstag",
+		"Freitag",
+		"Samstag",
+	},
+}
+
+var months = map[string][]string{
+	"de": []string{
+		"Januar",
+		"Februar",
+		"März",
+		"April",
+		"Mai",
+		"Juni",
+		"Juli",
+		"August",
+		"September",
+		"Oktober",
+		"November",
+		"Dezember",
+	},
+}
+
+func localeWeekdayString(weekday time.Weekday, locale string) string {
+	if localeDays, ok := days[locale]; ok {
+		if int(weekday) >= 0 && int(weekday) < len(localeDays) {
+			return localeDays[weekday]
+		}
+	}
+	return weekday.String()
+}
+
+func localeMonthString(month time.Month, locale string) string {
+	if localeMonths, ok := months[locale]; ok {
+		if int(month) >= 0 && int(month) < len(localeMonths) {
+			return localeMonths[month]
+		}
+	}
+	return month.String()
+}
+
+func strftime(b *bytes.Buffer, c rune, t time.Time, locale string) error {
 	switch c {
 	case 'A':
-		b.WriteString(t.Weekday().String())
+		b.WriteString(localeWeekdayString(t.Weekday(), locale))
 	case 'a':
-		b.WriteString(t.Weekday().String()[:3])
+		b.WriteString(localeWeekdayString(t.Weekday(), locale)[:3])
 	case 'B':
-		b.WriteString(t.Month().String())
+		b.WriteString(localeMonthString(t.Month(), locale))
 	case 'b':
-		b.WriteString(t.Month().String()[:3])
+		b.WriteString(localeMonthString(t.Month(), locale)[:3])
 	case 'C':
 		fmt.Fprintf(b, "%02d", t.Year())
 	case 'D':
@@ -41,7 +88,7 @@ func strftime(b *bytes.Buffer, c rune, t time.Time) error {
 	case 'H':
 		fmt.Fprintf(b, "%02d", t.Hour())
 	case 'h':
-		b.WriteString(t.Month().String()[:3])
+		b.WriteString(localeMonthString(t.Month(), locale)[:3])
 	case 'I':
 		hr := t.Hour() % 12
 		if hr == 0 {
@@ -110,7 +157,7 @@ func strftime(b *bytes.Buffer, c rune, t time.Time) error {
 	case 't':
 		b.WriteByte('\t')
 	case 'v':
-		fmt.Fprintf(b, "%2d-%s-%04d", t.Day(), t.Month().String()[:3], t.Year())
+		fmt.Fprintf(b, "%2d-%s-%04d", t.Day(), localeMonthString(t.Month(), locale)[:3], t.Year())
 	case 'w':
 		fmt.Fprintf(b, "%d", t.Weekday())
 	case 'Y':
@@ -172,7 +219,7 @@ func strftime(b *bytes.Buffer, c rune, t time.Time) error {
 //  %y  year without century as a number. Single digits are preceded by zero (14)
 //  %Z  time zone name (UTC)
 //  %z  the time zone offset from UTC (-0700)
-func Format(format string, t time.Time) string {
+func Format(format string, t time.Time, locale string) string {
 	if !strings.Contains(format, "%") {
 		return format
 	}
@@ -202,7 +249,7 @@ func Format(format string, t time.Time) string {
 			continue
 		}
 
-		err = strftime(outBuf, nr, t)
+		err = strftime(outBuf, nr, t, locale)
 		if err != nil {
 			outBuf.WriteByte('%')
 			outBuf.WriteRune(nr)
@@ -213,6 +260,6 @@ func Format(format string, t time.Time) string {
 }
 
 // Strftime is an alias for Format
-func Strftime(format string, t time.Time) string {
-	return Format(format, t)
+func Strftime(format string, t time.Time, locale string) string {
+	return Format(format, t, locale)
 }
