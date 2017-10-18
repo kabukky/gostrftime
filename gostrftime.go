@@ -53,8 +53,9 @@ func localeWeekdayString(weekday time.Weekday, locale string) string {
 
 func localeMonthString(month time.Month, locale string) string {
 	if localeMonths, ok := months[locale]; ok {
-		if int(month) >= 0 && int(month) < len(localeMonths) {
-			return localeMonths[month]
+		monthInt := int(month - 1)
+		if monthInt >= 0 && monthInt < len(localeMonths) {
+			return localeMonths[monthInt]
 		}
 	}
 	return month.String()
