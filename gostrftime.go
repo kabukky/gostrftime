@@ -172,6 +172,10 @@ func strftime(b *bytes.Buffer, c rune, t time.Time, locale string) error {
 		_, offset := t.Zone()
 		allMinutes := int(offset / 60)
 		fmt.Fprintf(b, "%+03d%02d", int(allMinutes/60), int(allMinutes%60))
+	case 'ß':
+		_, offset := t.Zone()
+		allMinutes := int(offset / 60)
+		fmt.Fprintf(b, "%+03d:%02d", int(allMinutes/60), int(allMinutes%60))
 	default:
 		return fmt.Errorf("No valid replacement")
 	}
@@ -220,6 +224,7 @@ func strftime(b *bytes.Buffer, c rune, t time.Time, locale string) error {
 //  %y  year without century as a number. Single digits are preceded by zero (14)
 //  %Z  time zone name (UTC)
 //  %z  the time zone offset from UTC (-0700)
+//  %ß  the time zone offset from UTC with colon (-07:00)
 func Format(format string, t time.Time, locale string) string {
 	if !strings.Contains(format, "%") {
 		return format
